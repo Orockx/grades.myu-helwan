@@ -1,0 +1,329 @@
+
+function old_is_complex_password(value){
+    if(value.match(/^(((.*[a-z])(?=.*[A-Z])(?=.*[\d]))|((.*[A-Z])(?=.*[a-z])(?=.*[\d]))|((.*[a-z])(?=.*[A-Z])(?=.*[\W]))|((.*[A-Z])(?=.*[a-z])(?=.*[\W]))|((.*[a-z])(?=.*[\d])(?=.*[\W]))|((.*[A-Z])(?=.*[\d])(?=.*[\W]))).{7,50}$/)) {
+        return true;
+    }
+    return false;
+}
+
+function is_complex_password(value){
+    var count = 0, minL=8,  maxL=50;
+    var allowed = "[a-zA-Z0-9.!@$^*_]";
+    var valid = true;
+    for(var char of value){
+        if(! char.match(allowed))   valid=false;
+    }
+
+    if( minL <= value.length && value.length <= maxL  ){
+        if (value.match("^[a-zA-Z]") && valid){
+            if( value.match(".*\\d.*") )
+               count ++;
+            if( value.match(".*[a-z].*") )
+               count ++;
+            if( value.match(".*[A-Z].*") )
+               count ++;
+            if( value.match(".*[.!@$^*_].*") )
+               count ++;
+        }
+    }
+
+   return count >= 3;
+}
+
+function is_email(value) {
+    if (value=='') return true;
+    var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+    return pattern.test(value);
+}
+
+function is_english(value) {
+    /^[A-Za-z][A-Za-z0-9]*$/.test(value);
+    if(value.match(/^[A-Za-z][A-Za-z0-9]*$/)){
+	    return true;
+    }
+    return false;
+}
+
+/* checks a whole word */
+function only_english_letters(value) {
+    var english = /^[A-Za-z]*$/;
+    if (english.test(value)){
+	    return true;
+    }
+    return false;
+}
+
+/* c/c by c/c on writing */
+function only_english(value, only_letters){
+    var ew = value;
+    if(only_letters){}
+    else{
+        if(ew == 32)    //space
+            return true;
+        if(48 <= ew && ew <= 57)    //numbers
+            return true;
+    }
+    if(65 <= ew && ew <= 90)    //caps
+        return true;
+    if(97 <= ew && ew <= 122)   //small
+        return true;
+    return false;
+}
+
+function only_digits(value) {
+    var ew = value;
+    if(48 <= ew && ew <= 57)    //numbers
+        return true;
+    return false;
+}
+
+function serialize_form_to_dict(frm, dict){
+    var options = $(frm).serializeArray();
+
+    $.each(options, function(i, option){
+        if(option.name=="csrfmiddlewaretoken")  return true;// no continue in .each
+        if(dict[option.name]!=undefined)   dict[option.name] = dict[option.name]+","+option.value;
+        else dict[option.name] = option.value;
+    });
+    return dict;
+}
+
+function simple_search(){//debugger
+    var txtSrch = $("#txtSimpleSrch").val().toLowerCase();
+    var items = $("#ulSrchItems li");
+
+    if(txtSrch==""){
+        $(items).removeClass("hidden");
+    }
+    else{
+        items.each(function (indx, item) {
+            if($(item).find("span:eq(1)").text().toLowerCase().indexOf(txtSrch)==0)  $(item).removeClass("hidden");
+            else    $(item).addClass("hidden");
+        })
+    }
+    $("#ulSrchItems li:not(.hidden)").each(function (indx, item) {
+        $(item).find("span:eq(0)").text(indx+1);
+    });
+    $("#ulSrchItems li").css('border-top','none');//debugger
+    $("#ulSrchItems li:not('.hidden'):eq(0)").css('border-top','1px solid #cbc5ba');
+}
+
+function draw_control1_according_to_rights(params) {    //rights, div_id, fn_add
+    var rights = params.rights;
+    var div_id = params.div_id?params.div_id:"control-1";
+    var fn_add = params.fn_add?params.fn_add:"add_item()";
+    $("#"+div_id).html(
+        (rights.indexOf('4.2.')==-1?'':'<li onclick="'+fn_add+'"><a class="tooltipMail" data-toggle="tooltip" data-placement="right" title="'+get_translated_value("ADD_NEW_ITEM")+'" href="javascript:void(0)"><i class="light-blue animation-icon fa fa-plus-square"></i></a></li>')
+    );
+}
+
+function draw_control2_according_to_rights(params) {    //rights, item_id, edit, add, div_id, fn_insert
+    var str = "";
+    if (params.add){
+        var fn_insert = params.fn_insert?params.fn_insert:"insert_item()";
+        if(params.rights.indexOf('4.2.')!=-1)
+            str = ''
+                + '<li onclick="'+fn_insert+'"><a class="tooltipMail" data-toggle="tooltip" data-placement="right" title="'+get_translated_value("SAVE")+'" href="javascript:void(0)"><i class="green animation-icon far fa-save"></i></a></li> '
+        ;
+    }
+    else if(params.edit){
+        var fn_update = params.fn_update?params.fn_update:"update_item('"+params.item_id+"')";
+        var fn_cancel = params.fn_cancel?params.fn_cancel:"get_index_data('"+params.item_id+"')";
+        if(params.rights.indexOf('4.3.')!=-1)
+            str = ''
+                + '<li onclick="'+fn_update+'"><a class="tooltipMail" data-toggle="tooltip" data-placement="right" title="'+get_translated_value("SAVE")+'" href="javascript:void(0)"><i class="green animation-icon far fa-save"></i></a></li> '
+                +' <li onclick="'+fn_cancel+'"><a class="tooltipMail" data-toggle="tooltip" data-placement="right" title="'+get_translated_value("CANCEL")+'" href="javascript:void(0)"><i class="animation-icon fa fa-undo"></i></a></li>'
+            ;
+    }
+    else{
+        str = ''
+            + (params.rights.indexOf('4.3.')==-1?'':'<li onclick="edit_item(\''+params.item_id+'\')"><a class="tooltipMail" data-toggle="tooltip" data-placement="right" title="'+get_translated_value("EDIT")+'" href="javascript:void(0)"><i class="yellow animation-icon fas fa-edit"></i></a></li> ')
+            +(
+                params.rights.indexOf('4.4.')==-1?'':' <li onclick="confirm_delete()"><a class="tooltipMail" data-toggle="tooltip" data-placement="right" title="'+get_translated_value("DELETE")+'" href="javascript:void(0)"><i class="red animation-icon fas fa-trash-alt"></i></a></li>'
+                + '<div class="modal fade" tabindex="-1" role="dialog" id="confirmDeleteModal" aria-labelledby="confirmDeleteLabel" aria-hidden="true">' +
+                    '  <div class="modal-dialog">' +
+                    '    <div class="modal-content">' +
+                    '<div class="modal-header">' +
+                    '        <h5 class="modal-title" id="confirmDeleteLabel">'+get_translated_value("CONFIRM")+'</h5>' +
+                    //'        <button type="button" class="close" data-dismiss="modal" aria-label="CLOSE" title="'+get_translated_value("CLOSE")+'">' +
+                    //'          <span aria-hidden="true">&times;</span>' +
+                    //'        </button>' +
+                    '      </div>' +
+                    '      <div class="modal-body">'+get_translated_value("CONFIRM_DELETE")+'</div>' +
+                    '      <div class="modal-footer">' +
+                    '        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">'+get_translated_value("CANCEL")+'</button>' +
+                    '        <button type="button" class="btn ls-light-blue-btn btn-sm" onclick="$(\'#confirmDeleteModal\').modal(\'hide\');delete_item(\''+params.item_id+'\')">'+get_translated_value("OK")+'</button>' +
+                    '      </div>'+
+                    '    </div>' +
+                    '  </div>' +
+                    '</div>'
+            )
+        ;
+    }
+    if(params.div_id)   $("#"+params.div_id).html(str);
+    else    $("#control-2").html(str);
+}
+
+function confirm_delete(){
+    $('#confirmDeleteModal').modal({backdrop:"static"});
+}
+
+
+function _print(printDivID, dir, content) {
+
+    var content_vlue = content?content:"";
+    var content_stylesheets = "";
+    var disp_setting = "toolbar=yes,location=no,directories=yes,menubar=yes,";
+    disp_setting += "scrollbars=yes,width=650, height=600, left=100, top=25";
+    if (printDivID != "") {
+        content_vlue = $("#" + printDivID).html();
+        content_stylesheets = $("#" + printDivID).find("link [rel=stylesheet]").outerHTML;
+    }
+
+    var docprint = window.open("", "", disp_setting);
+    docprint.document.open();
+    docprint.document.write(`
+        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+        <html style="direction:${dir};" dir="${dir}"><head><title>Inel Power System</title>
+        <link href="/static/plugins/bootstrap4/css/bootstrap.min.css" rel="stylesheet" type="text/css" />`
+        //+'<link href="/static/plugins/bootstrap-5.2.1-dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />'
+        + `<link href="/static/css/style.css" rel="stylesheet" type="text/css" />`
+        + (content_stylesheets?content_stylesheets:"")
+       // + "<style>/*{color:black !important}*/ h2 {page-break-after:always}@media Print {.tblprint {page-break-inside: auto;page-break-after: always};tr {page-break-inside: avoid;page-break-after: auto}thead {display: table-header-group}tfoot {display: table-footer-group}  #table_one_Res{display: inline-table}}</style>"
+        + `<style>{color:black !important;} body{background-color: white;} @media print{.break-page {page-break-after:always}}</style>
+        </head><body>`
+        + content_vlue
+        +
+        `<script>
+        document.addEventListener( "DOMContentLoaded", function() {
+          setTimeout(function(){
+              window.print();
+              window.close();
+          },2000);
+
+            }, false );
+        </script>
+        </body></html>
+    `);
+
+    docprint.document.close();
+    docprint.focus();
+}
+
+function get_translated_value(key){
+    var lang = Cookies.get(LANG_COOKIE);
+    if(! lang)  lang="ar";
+    try{
+        return TRANSLATED_STRINGS[key][lang];
+    }
+    catch (e) {
+        return key
+    }
+}
+
+
+$.fn.scrollToMe = function (focus) {
+    var x = $(this).offset().top - 100;
+    $('html,body').animate({scrollTop: x}, 500);
+    if(focus)
+        $(this).focus();
+};
+
+//custom Confirm Dialog with Custom message and callback handler
+function confirm_dialog(options, handler){
+  $(`
+    <div class="modal fade" id="myModal" role="dialog"> 
+     <div class="modal-dialog"> 
+       <!-- Modal content--> 
+        <div class="modal-content"> 
+           <div class="modal-body" style="padding:10px;"> 
+             <h4 class="text-center">${options.message}</h4> 
+             <div class="text-center"> 
+               <a class="btn btn-danger btn-sm btn-yes" onclick="${handler};$('#myModal').modal('hide');">`+get_translated_value("YES")+`</a> 
+               <a class="btn btn-default btn-sm btn-no" data-dismiss="modal">`+get_translated_value("NO")+`</a> 
+             </div> 
+           </div> 
+       </div> 
+    </div> 
+  </div>`).appendTo('body');
+
+  //Trigger the modal
+  $("#myModal").modal({
+     backdrop: 'static',
+     keyboard: false
+  });
+
+  //Remove the modal once it is closed.
+  $("#myModal").on('hidden.bs.modal', function () {
+      $("#myModal").remove();
+  });
+}
+
+function reload_current_app(){
+    $("#js_navToApp li a[appID='"+APP.currentApp+"']").trigger('click');
+}
+
+function validate_file_input(input_name, select_by_id, _validFileExtensions, required, size_limit) {
+    var arrInputs = document.getElementsByName(input_name);
+    if(select_by_id){
+        var elem = document.getElementById(input_name);
+        arrInputs = [elem];
+    }
+    for (var i = 0; i < arrInputs.length; i++) {
+        var oInput = arrInputs[i];
+
+        if (oInput.type == "file") {
+            var sFileName = oInput.value;
+            if (sFileName.length > 0) {
+
+                if(size_limit){
+                    if(oInput.files[0].size>(size_limit*1024*1024)){
+                        error_modal(get_translated_value("SIZE_EXCEEDED")+""+size_limit+"MB");
+                        return false;
+                    }
+
+                }
+                var blnValid = false;
+                for (var j = 0; j < _validFileExtensions.length; j++) {
+                    var sCurExtension = _validFileExtensions[j];
+                    if (sFileName.substr(sFileName.length - sCurExtension.length, sCurExtension.length).toLowerCase() == sCurExtension.toLowerCase()) {
+                        blnValid = true;
+                        break;
+                    }
+                }
+
+                if (!blnValid) {
+                    error_modal(get_translated_value("INVALID_EXTENSION")+_validFileExtensions.join());
+                    return false;
+                }
+            }
+            else{
+                if(required){
+                    error_modal(get_translated_value("FILE_REQUIRED"));
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+/****
+ * console.log(getRandomInt(3));
+// expected output: 0, 1 or 2
+ */
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
+
+function update_sysmail_notification(count, content){
+    $("#sysmailBadge").remove();
+    $("#notiIcon").hide();
+    if(parseInt(count)>0) {
+        $("#left-navigation i.sysmail").parent("a").append("<span class='badge badge-red' id='sysmailBadge'>" + count + "</span>");
+        $("#notiIcon").show();
+    }
+    $("#btnSysmailNoti").text(count);
+}

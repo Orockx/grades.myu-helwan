@@ -1,0 +1,931 @@
+var $windowWidth = $(window).width();
+var $rightSidebarControl = $(".right-sidebar");
+var $navigationControl = $(".menu-control");
+var $leftNavigation = $("#left-navigation");
+var $minWrapper = $("#min-wrapper");
+var $navigation = $("ul.mainNav");
+
+
+APP = {
+    currentApp:null
+};
+
+jQuery(document).ready(function(a) {//alert(LANG_COOKIE);alert(Cookies.get(LANG_COOKIE));
+    // to prevent browser back button
+    history.pushState(null, null, location.href);
+    history.back(); history.forward();
+    window.onpopstate = function () { history.go(1); };
+
+    $("body").removeClass("login-screen");
+
+    //fix_lang_cookie(); // ---------->
+    call_navigation();
+    if ($windowWidth > 1025) {
+        onDesktop()
+    } else {
+        if ($windowWidth < 500) {
+            onPhoneDefault()
+        } else {
+            if ($windowWidth < 1025) {
+                onTabletDefault()
+            }
+        }
+    }
+    minimize_left_menu_hover_Display();
+    right_box_display();
+    phone_nav_control();
+    layout_change_color_start();
+    plugin_load_for_layout();
+    dropdown_top_nav_bar();
+    dropDownMenuControl();
+    left_bar_minimize();
+
+    left_bar_action();
+    change_password_action();
+
+    //on_logout();
+
+    on_change_lang();
+
+    land_page_control();
+
+    dashboard_view();
+    
+    enable_push_sw();
+
+    get_unread_sysmail();
+    contacts_controls_limitations();
+});
+
+//send language token for all requests//islamn
+jQuery.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+    if(originalOptions.url.indexOf("http://cdn.")!=0 && originalOptions.url.indexOf("https://cdn.")!=0) {
+        jqXHR.setRequestHeader("lang", Cookies.get(LANG_COOKIE));
+        jqXHR.setRequestHeader("Accept-Language", Cookies.get(LANG_COOKIE));
+        jqXHR.setRequestHeader('app_id', APP.currentApp);
+    }
+
+
+  if (originalOptions.url.indexOf("/userNotifications")!=0) {
+    $("#spinner-container").show();
+  }
+});
+$(document).ajaxSuccess(function (event, request, settings) {
+  // console.log("SUCCESS -------------------------------");
+  // console.log(event, request, settings);
+  // console.log("SUCCESS -------------------------------------");
+
+  //errorModal('request success');
+  /*if(request.responseJSON && request.responseJSON.logout){
+      console.log(request);
+      //window.location.href = "/";
+  }*/
+});
+$(document).ajaxStop(function () {
+  $("#spinner-container").hide();
+});
+/*
+function on_change_lang() {
+    $('#btnLang').click(function(){
+        var selected_lang = $(this).attr('key-lang');
+        $.ajax({
+            url: "/changeLang?app_id="+APP.currentApp,
+            data: {'lang':selected_lang},
+            type: "get",
+            dataType: 'json',
+            success: function (data) {
+                if(data["success"]) {//debugger
+                    //selected_lang = data["lang"];
+                    Cookies.set(LANG_COOKIE, selected_lang, {expires:30});
+                    window.location = "/";
+                }
+            }
+        });
+    });
+}*/
+
+function get_unread_sysmail(mail_view="mailbox"){
+    $.ajax({
+        url: mail_view+"/new_count",
+        data: {},
+        type: "get",
+        dataType: 'json',
+        success: function (result) {
+            update_sysmail_notification(result["count"]);
+        }
+    });
+}
+
+
+function reloadPage() {
+  window.location.href = '/';
+}
+
+$(document).ajaxError(function (event, jqxhr, settings, thrownError) {
+  // console.log("ERROR -------------------------------");
+  // console.log( event, jqxhr, settings, thrownError);
+
+  switch (jqxhr.status) {
+    case 401:
+        //reloadPage()
+        //alert('401');alert(get_translated_value("SESSION_EXPIRED"))
+        error_modal(gettext("SESSION_EXPIRED"), null, reloadPage);
+        break;
+    case 403:
+      error_modal(gettext("403"), null, reloadPage);
+      break;
+    case 408:
+        break;
+    default:
+      error_modal(gettext("GENERAL_ERROR"));
+      break;
+  }
+  // console.log("ERROR -------------------------------------");
+  $("#spinner-container").hide();
+});
+
+window.onerror = function () {
+  $("#spinner-container").hide();
+};
+
+function error_modal(msg, options, callback){
+    var notify=humane.create({baseCls:"humane-original",addnCls:"humane-original-error"});
+    var all_options = {clickToClose:false, timeout:5000, waitForMove:false};//console.log(options)
+    if(options){
+        Object.keys(options).forEach(function(key) {
+            all_options[key] = options[key];
+        });
+    }//console.log(all_options)
+
+    notify.log("<i class='fa fa-times'></i> <span>"+msg+"</span>",all_options, callback);
+}
+
+function success_modal(msg, callback) {
+    var notify=humane.create({baseCls:"humane-original",addnCls:"humane-original-success"});
+    if(callback) callback();
+    notify.log("<i class='fa fa-check'></i> <span>"+msg+"</span>",{timeout:4000});
+}
+
+
+function info_modal(msg) {
+    var notify=humane.create({baseCls:"humane-original",addnCls:"humane-original-info"});
+    notify.log("<i class='fa fas-bell'></i> <span>"+msg+"</span>",{timeout:4000});
+}
+
+function on_logout(){
+    /*$.ajaxSetup(function() {
+        dataFilter : function(data, type) {
+            //console.log(type);
+            var local_data = data;
+            try{
+                JSON.parse(local_data);
+                local_data = JSON.parse(local_data);
+            }
+            catch(e){
+                "";
+            }
+
+            if(local_data &&  (local_data['logout'] || local_data.toString().replace(/\s/g, '').replace(/\"/g, '').indexOf("logout:true")!=-1)) {
+                var notify=humane.create({baseCls:"humane-bigbox",addnCls:"humane-bigbox-error"});
+
+                notify.log("<i class='fa fa-times'></i> <span>"+logout_msg[Cookies.get(LANG_COOKIE)]+"</span>",{timeout:6000}, function(){
+                    window.location = "/";
+                });
+            } else {
+                return data;
+            }
+        }
+    });*/
+}
+
+function call_navigation() {
+    $navigation.multiAccordion({
+        multiAccordion: true,
+        speed: 500,
+        closedSign: '<i class="fa fa-caret-down"></i>',
+        openedSign: '<i class="fa fa-caret-up"></i>'
+    });
+}
+function minimize_left_menu_hover_Display() {
+    $("ul.mainNav li").hover(function() {
+        if ($($leftNavigation).hasClass("active")) {
+            $(this).children("ul").addClass("open")
+        }
+    }, function() {
+        if ($($leftNavigation).hasClass("active")) {
+            $(this).children("ul").removeClass("open");
+            $(this).children("ul").removeAttr("style")
+        }
+    })
+}
+function dropDownMenuControl() {
+    $("ul.mainNav li").children("ul").removeAttr("style")
+}
+function changeMenuSizeTriger() {
+    $(window).trigger("resize")
+}
+function left_bar_minimize() {
+    $($navigationControl).click(function() {
+        if ($navigation.hasClass("active")) {
+            /*$leftNavigation.removeClass("active");
+            $navigation.removeClass("active");
+            $minWrapper.removeClass("active");
+            changeMenuSizeTriger()*/
+            maximize_left_bar();
+
+        } else {
+            /*$navigation.addClass("active");
+            $minWrapper.addClass("active");
+            $leftNavigation.addClass("active");
+            $navigation.find("ul").removeAttr("style");
+            changeMenuSizeTriger()*/
+            minimize_left_bar();
+        }
+    })
+}
+
+function minimize_left_bar() {
+    $navigation.addClass("active");
+    $minWrapper.addClass("active");
+    $leftNavigation.addClass("active");
+    $navigation.find("ul").removeAttr("style");
+    changeMenuSizeTriger()
+}
+function maximize_left_bar(){
+    $leftNavigation.removeClass("active");
+    $navigation.removeClass("active");
+    $minWrapper.removeClass("active");
+    changeMenuSizeTriger()
+}
+function onDesktop() {}
+function onTabletDefault() {
+    $navigation.addClass("active");
+    $minWrapper.addClass("active");
+    $leftNavigation.addClass("active");
+    $navigation.slideDown()
+}
+function onTablet() {
+    $navigation.addClass("active");
+    $minWrapper.addClass("active");
+    $leftNavigation.addClass("active")
+}
+function onPhoneDefault() {
+    $navigation.addClass("mobile");
+    $navigation.css("display", "none");
+    $leftNavigation.css("width", "100%");
+    $navigationControl.removeClass("spinIn").addClass("spinOut");
+    $navigationControl.removeClass("active");
+    $leftNavigation.children("ul").removeClass("active");
+    $leftNavigation.removeClass("active");
+    $($minWrapper).css("paddingLeft", "0")
+}
+function onPhone() {
+    $($navigation).addClass("mobile");
+    $($navigation).css("display", "none");
+    $($leftNavigation).animate({
+        width: "100%"
+    }, 100, function() {
+        $navigationControl.removeClass("spinIn").addClass("spinOut");
+        $navigationControl.removeClass("active");
+        $leftNavigation.children("ul").removeClass("active");
+        $leftNavigation.removeClass("active")
+    });
+    $($minWrapper).animate({
+        paddingLeft: "0"
+    }, 100, function() {})
+}
+var resizeId;
+$(window).resize(function() {
+    // clearTimeout(resizeId);
+    // resizeId = setTimeout(doneResizingLayout, 500)
+});
+function doneResizingLayout() {
+    $('.land').hide();  //mmostafa
+    var a = $(window).width();
+    if ($windowWidth != a) {
+        if (a < 500) {
+            onPhone()
+        } else {
+            if (a < 1025) {
+                $leftNavigation.removeAttr("style");
+                $minWrapper.removeAttr("style");
+                $leftNavigation.removeAttr("style");
+                $navigation.removeAttr("style");
+                $navigation.removeClass("mobile");
+                onTablet()
+            } else {
+                if (a > 1025) {
+                    desktopResize()
+                }
+            }
+        }
+        $windowWidth = a
+    } else {
+        $windowWidth = a
+    }
+}
+function desktopResize() {
+    $leftNavigation.removeAttr("style");
+    $minWrapper.removeAttr("style");
+    $leftNavigation.removeAttr("style");
+    $navigation.removeAttr("style");
+    $navigation.removeClass("mobile");
+    onDesktop()
+}
+function right_box_display() {
+    $rightSidebarControl.click(function() {
+        $("#right-wrapper").addClass("slide-out");
+        /*var direction="right";
+        var options = {};
+        if($(document).attr("dir")=="rtl")  direction = "left";
+        options[direction] = 0;
+        $("#right-wrapper").animate(options, 500, function() {})*/
+    });
+    $("#right-wrapper .close-right-wrapper a").click(function() {
+        $("#right-wrapper").removeClass("slide-out");
+        /*
+        var direction="right";
+        var options = {};
+        if($(document).attr("dir")=="rtl")  direction = "left";
+
+        options[direction] = "-280px";
+        $("#right-wrapper").animate(options, 500, function() {})*/
+    })
+}
+function phone_nav_control() {
+    $(".phone-nav-control").click(function() {
+        if ($navigation.is(":hidden")) {
+            $navigation.slideDown()
+        } else {
+            $navigation.slideUp()
+        }
+    })
+}
+function layout_change_color_start() {
+    var a = $("body");
+    $(".change-color-box ul li ").click(function() {
+        a.removeClass("black-color");
+        a.removeClass("blue-color");
+        a.removeClass("deep-blue-color");
+        a.removeClass("red-color");
+        a.removeClass("light-green-color");
+        a.removeClass("default");
+        $(".change-color-box ul li ").removeClass("active");
+        if ($(this).hasClass("active")) {} else {
+            var c = $(this).attr("class");
+            a.addClass(c);
+            $(this).addClass("active")
+        }
+    });
+    var b = $("#change-color");
+    $("#change-color-control a").click(function() {
+        if ($(this).hasClass("active")) {
+            $(this).removeClass("active");
+            if(document.dir=="ltr")
+                $(b).animate({right: "-200px"}, 500, function() {});
+            else
+                $(b).animate({left: "-200px"}, 500, function() {});
+        } else {
+            $(this).addClass("active");
+            if(document.dir=="ltr")
+                $(b).animate({right: "0"}, 500, function() {});
+            else
+                $(b).animate({left: "0"}, 500, function() {})
+        }
+    })
+}
+function dropdown_top_nav_bar() {
+    $(".dropdown").on("show.bs.dropdown", function(a) {
+        $(this).find(".dropdown-menu").first().stop(true, true).slideDown(500, function() {})
+    });
+    $(".dropdown").on("hide.bs.dropdown", function(a) {
+        $(this).find(".dropdown-menu").first().stop(true, true).slideUp(500, function() {})
+    })
+}
+function plugin_load_for_layout() {
+    try {
+        $(".nano").nanoScroller({
+            preventPageScrolling: true,
+            alwaysVisible: true,
+            scroll: "top"
+        });
+        /*$(".nano-chat").nanoScroller({
+            preventPageScrolling: true,
+            alwaysVisible: true,
+            scroll: "bottom"
+        });
+        $(".progress-bar").progressbar({
+            display_text: "fill"
+        });
+        $(".easyPieChart").easyPieChart({
+            barColor: $redActive,
+            scaleColor: $redActive,
+            easing: "easeOutBounce",
+            onStep: function(i, h, e) {
+                $(this.el).find(".easyPiePercent").text(Math.round(e))
+            }
+        });
+        var f = window.chart = $(".easyPieChart").data("easyPieChart");
+        $(".js_update").on("click", function() {
+            f.update(Math.random() * 200 - 100)
+        });*/
+        var d = Array.prototype.slice.call(document.querySelectorAll(".js-switch"));
+        d.forEach(function(e) {
+            var h = new Switchery(e)
+        });
+        var c = Array.prototype.slice.call(document.querySelectorAll(".js-switch-red"));
+        c.forEach(function(h) {
+            var e = new Switchery(h,{
+                color: $redActive
+            })
+        });
+        var b = Array.prototype.slice.call(document.querySelectorAll(".js-switch-light-green"));
+        b.forEach(function(h) {
+            var e = new Switchery(h,{
+                color: $lightGreen
+            })
+        });
+        var a = Array.prototype.slice.call(document.querySelectorAll(".js-switch-light-blue"));
+        a.forEach(function(e) {
+            var h = new Switchery(e,{
+                color: $lightBlueActive
+            })
+        })
+    } catch (g) {}
+}
+/*
+function detectIE() {
+    var c = window.navigator.userAgent;
+    var b = c.indexOf("MSIE ");
+    var a = c.indexOf("Trident/");
+    if (b > 0) {
+        return parseInt(c.substring(b + 5, c.indexOf(".", b)), 10)
+    }
+    if (a > 0) {
+        var d = c.indexOf("rv:");
+        return parseInt(c.substring(d + 3, c.indexOf(".", d)), 10)
+    }
+    return false
+}
+*/
+
+function land_page_control() {
+    //$(".land-header-group div.dropdown-menu").click(function(e){e.stopPropagation()});
+    // $(".land-header-group .dropdown-menu").each(function(){
+    //     $(this).css("top" , "50% !important");
+    //     $(this).css("left", "50% !important");
+    //     $(this).css("margin-top" , "-"+($(this).height()/2 +150)+"px"); //(150: fixes unknown margin)
+    //     $(this).css("margin-left", "-"+($(this).width()/2)+"px");
+    // });
+    // $('.land-header-group').each(function(){
+    //     $(this).on('show.bs.dropdown', function () {debugger
+    //         var menu = $(this).find(".dropdown-menu");
+    //          $(menu).css("top", "50% !important");
+    //          $(menu).css("left", "50% !important");
+    //          $(menu).css("margin-top" , "-"+($(menu).height()/2)+"px");
+    //          $(menu).css("margin-left", "-"+($(menu).width()/2) +"px");
+    //     });
+    // });
+
+    $(".land-navigation li a:not('.dropdown-toggle')").click(function () {
+        var app_id = $(this).attr('appid');
+        click_land_app(app_id);
+        return
+
+        //if($(this).attr("data-toggle") == "dropdown")   return;
+        $('.land').hide();
+        $(".non-land").show();
+        var app_id = $(this).attr('appid');
+        $($navigationControl).fadeIn();
+        /*if(! $navigation.hasClass("mobile")){
+            minimize_left_bar();//$($navigationControl).trigger("click"); ============> responsive theme bugs
+            //
+        }
+        else{
+            $(".phone-nav-control").trigger("click");
+        }*/
+        var that = $("#js_navToApp li a[appid='"+app_id+"']");//debugger
+        $(that).trigger("click");
+        $(that).parent("li").parent("ul").siblings(".nav-header").trigger("click");
+        $(that).parent("li").parent("ul").siblings(".nav-header").trigger("mouseleave");
+        // ---- if header is clicked, activate ---------/
+        /*var goto =  $(that).attr('goto');
+        if(!goto)  $(that).addClass("active");*/
+
+
+    });
+}
+
+function click_land_app(app_id){
+    $('.land').hide();
+    $(".non-land").show();
+    $($navigationControl).fadeIn();
+    /*if(! $navigation.hasClass("mobile")){
+        minimize_left_bar();//$($navigationControl).trigger("click"); ============> responsive theme bugs
+        //
+    }
+    else{
+        $(".phone-nav-control").trigger("click");
+    }*/
+    var that = $("#js_navToApp li a[appid='"+app_id+"']");//debugger
+    $(that).trigger("click");
+    $(that).parent("li").parent("ul").siblings(".nav-header").trigger("click");
+    $(that).parent("li").parent("ul").siblings(".nav-header").trigger("mouseleave");
+}
+
+function left_bar_action(){
+    $("#js_navToApp li a").click(function(){
+
+        $('.land').fadeOut(100);
+        $(".non-land").fadeIn(100);
+
+        var goto =  $(this).attr('goto');
+        if(!goto)  return;
+
+        APP.currentApp = $(this).attr('appid');
+        APP.currentView = goto.split('/')[0];
+        APP.currentURL = goto;
+
+        /*$("#js_navToApp li a").removeClass("active");
+        $(this).addClass("active");
+        let header = $(this).find("span").text();
+        $("#js-top-header").html(header);*/
+        activate_left_nav_item(this);
+        //translateNode($("#js-top-header"));
+
+        menu_action(goto);
+
+        /*$.ajax({
+            url: "/appSession?app_id="+APP.currentApp,
+            data: {'csrfmiddlewaretoken':Cookies.get('csrftoken')},
+            type: "post",
+            dataType: 'html',//should be html
+            success: function (data1) {//alert(data);alert(data=="Done");alert(data==="Done")
+                if(data1=="Done") {
+                    menu_action(goto);
+                }
+            }
+        });*/
+    });
+}
+function activate_left_nav_item(item){
+    $("#js_navToApp li a").removeClass("active");
+    $(item).addClass("active");
+    let header = $(item).find("span:eq(0)").text();
+    $("#js-top-header").html(header);
+
+}
+
+function menu_action(goto, params){ //params={click_item_id}
+    $('.land').fadeOut(100);
+    $("#div-data-container").empty();
+    $.ajax({
+        url: goto,
+        data: {
+            //'csrfmiddlewaretoken':Cookies.get('csrftoken'),
+            //'add_session':true,
+            'app_id':APP.currentApp,
+            'click_item_id':params?params.click_item_id:null
+        },
+        type: "get",    // must be get to be cached in service worker  ---> cache.put(get_reuqest, response)
+        dataType: 'html',
+        success: function (result) {//console.log(data)
+            $('#div-data-container').html(result);
+            $('#div-data-container').scrollToMe();
+
+            /****** mobile **********
+            if($navigation.hasClass("mobile")){
+                //minimize_left_bar();
+                //$(".phone-nav-control").trigger("click");
+            }*/
+        }
+    });
+}
+
+function change_password_action(){
+    $("#frmPassword").submit(function(e) {
+        e.preventDefault();
+        $("#div-password-feedback").html("");
+        $("#div-password-feedback").hide();
+        //return false;
+        var form = document.getElementById('frmPassword');
+        if (form.checkValidity() === false) {
+            form.classList.add('was-validated');
+            return false;
+        }
+        if(!is_complex_password($("[name='txtNewPassword']").val())){
+            $("#div-password-feedback").html(gettext("WEAK_PASSWORD"));
+            $("#div-password-feedback").show();
+            return false;
+        }
+        if($("[name='txtNewPassword']").val()!=$("[name='txtNewPassword2']").val()){
+            $("#div-password-feedback").html(gettext("PASSWORD_NOT_IDENTICAL"));
+            $("#div-password-feedback").show();
+            return false;
+        }
+        form.classList.add('was-validated');
+
+        var data = {'csrfmiddlewaretoken':Cookies.get('csrftoken')};
+        data = serialize_form_to_dict("#frmPassword", data);
+
+        $.ajax({
+            url: "/change_password",
+            data: data,
+            type: "post",
+            dataType: 'json',
+            success: function (result) {//console.log(data)
+                if(result["failed"]){
+                    error_modal(result["msg"]);
+                }
+                else{
+                    success_modal(result["msg"]);
+                    $("#right-wrapper .close-right-wrapper a").trigger('click');
+                    reset_right_sidebar();
+                    if(result["refresh"])
+                        window.location="/";
+                }
+            }
+        });
+    });
+}
+
+function reset_right_sidebar() {
+    $("#frmPassword input").val("");
+    $("#div-password-feedback").html("");
+    $("#div-password-feedback").hide();
+}
+
+function dashboard_view(){
+    $("#a_dashboard").click(function () {
+        $("#div-data-container").html($("#dashboard-content").html());
+       activate_left_nav_item($("#a_dashboard"));
+       $("#spinner-container").hide();
+    });
+}
+
+function enable_push_sw() {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        //console.log('Service Worker and Push is supported');
+
+        navigator.serviceWorker.register('/static/js/serviceworkers/firebase-messaging-sw.js')
+        .then(function(swReg) {
+            console.log('Service Worker is registered', swReg);
+
+            swRegistration = swReg;
+
+            // ------- initialize UI ---------//
+            // Set the initial subscription value
+            swRegistration.pushManager.getSubscription()
+            .then(function(subscription) {
+                isSubscribed = !(subscription === null);
+
+                if (isSubscribed) {
+                    console.log('User IS subscribed.');
+                } else {
+                    console.log('User is NOT subscribed.');
+                }
+
+            })
+            .catch(function(error) {
+                console.error('Service Worker Error', error);
+            });
+        });
+    } else {
+      console.warn('Push messaging is not supported');
+      //pushButton.textContent = 'Push Not Supported';
+    }
+}
+
+
+function contacts_controls_limitations(){
+    $("[name='txtFirstName'], [name='txtMiddleName'], [name='txtLastName']").on('textInput', function(event){
+        var ew = event.originalEvent.data.charCodeAt(0);//console.log(ew)
+        return only_english(ew, true);
+    });
+
+    $("[name='txtFirstName'], [name='txtMiddleName'], [name='txtLastName']").on('contextmenu paste', function (event) {
+        event.preventDefault();
+        return false;
+    });
+}
+function save_contacts() {
+    //e.preventDefault();
+    $("#div-contacts-feedback").html("");
+    $("#div-contacts-feedback").hide();
+    $("#frmContacts .invalid-feedback").html("");
+    $("#frmContacts .invalid-feedback").hide();
+    //return false;
+    var form = document.getElementById('frmContacts');
+    if (form.checkValidity() === false) {
+        form.classList.add('was-validated');
+        return false;
+    }
+    var is_form_valid = true;
+    var input =  document.getElementsByName("txtMobile2")[0];
+    var min_length =  input.getAttribute("minlength");
+    if($("[name='txtMobile2']").val().length<min_length){
+         $("#div-contacts-feedback").html(gettext("MOBILE_MIN_VALIDATION").replace("%(min)s", min_length));
+         $("#div-contacts-feedback").show();
+        is_form_valid = false;
+    }
+    if(!is_email($("[name='txtEmail2']").val())){
+         $("#div-contacts-feedback").html(gettext("INVALID_EMAIL"));
+         $("#div-contacts-feedback").show();
+        is_form_valid = false;
+    }
+    input =  document.getElementsByName("txtFirstName")[0];
+    min_length =  input.getAttribute("minlength");
+    var max_length =  input.getAttribute("maxlength");
+    if($("[name='txtFirstName']").val().length<min_length || $("[name='txtFirstName']").val().length>max_length){
+         $("#firstNameFeedback").html(gettext("MIN_MAX_LENGTH_LIMIT").replace("%(min)s", min_length).replace("%(max)s", max_length));
+         $("#firstNameFeedback").show();
+        is_form_valid = false;
+    }
+    if(!only_english_letters($("[name='txtFirstName']").val())){
+        $("#firstNameFeedback").html(gettext("ONLY_ENGLISH_LETTERS"));
+        $("#firstNameFeedback").show();//debugger
+        //$("[name='txtFirstName']").addClass("is-invalid"); // does not effect in style
+        is_form_valid = false;
+    }
+    input =  document.getElementsByName("txtMiddleName")[0];
+    min_length =  input.getAttribute("minlength");
+    max_length =  input.getAttribute("maxlength");
+    if($("[name='txtMiddleName']").val().length<min_length || $("[name='txtMiddleName']").val().length>max_length){
+         $("#middleNameFeedback").html(gettext("MIN_MAX_LENGTH_LIMIT").replace("%(min)s", min_length).replace("%(max)s", max_length));
+         $("#middleNameFeedback").show();
+        is_form_valid = false;
+    }
+
+    if(!only_english_letters($("[name='txtMiddleName']").val())){
+        $("#middleNameFeedback").html(gettext("ONLY_ENGLISH_LETTERS"));
+        $("#middleNameFeedback").show();//debugger
+        //$("[name='txtMiddleName']").addClass("is-invalid"); // does not effect in style
+        is_form_valid = false;
+    }
+    input =  document.getElementsByName("txtLastName")[0];
+    min_length =  input.getAttribute("minlength");
+    max_length =  input.getAttribute("maxlength");
+    if($("[name='txtLastName']").val().length<min_length || $("[name='txtLastName']").val().length>max_length){
+         $("#lastNameFeedback").html(gettext("MIN_MAX_LENGTH_LIMIT").replace("%(min)s", min_length).replace("%(max)s", max_length));
+         $("#lastNameFeedback").show();
+        is_form_valid = false;
+    }
+    if(!only_english_letters($("[name='txtLastName']").val())){
+        $("#lastNameFeedback").html(gettext("ONLY_ENGLISH_LETTERS"));
+        $("#lastNameFeedback").show();//debugger
+        //$("[name='txtLastName']").addClass("is-invalid"); // does not effect in style
+        is_form_valid = false;
+    }
+
+    form.classList.add('was-validated');
+    if(! is_form_valid) return false;
+
+    var data = {'csrfmiddlewaretoken':$("#frmContacts [name='csrfmiddlewaretoken']").val()};
+    data = serialize_form_to_dict("#frmContacts", data);
+
+    $.ajax({
+        url: "personal/save_extra_contacts",
+        data: data,
+        type: "post",
+        dataType: 'json',
+        success: function (result) {//console.log(data)
+            if(result["failed"]){
+                $("#div-contacts-feedback").html(result["msg"]);
+                $("#div-contacts-feedback").show();
+            }
+            else{
+                success_modal(result["msg"]);
+                window.location="/";
+            }
+        }
+    });
+}
+
+function edit_contacts() {
+    $("#contactsModal").modal({"show":true});
+}
+
+function get_agreement_text(univ_name) {
+    var l = Cookies.get(LANG_COOKIE);
+    var txt = "";
+    if (l=="ar"){
+        txt = ""
+            + "<p>الإمكانيات التي تتيحها "+univ_name+" لطلابها هي لإثراء العملية التعليمية والبحثية، وهذه المعلومات تشمل على سبيل المثال وليس الحصر أنظمة معلومات الجامعة، البريد الإلكتروني، شبكة الإنترنت، الشبكة الداخلية للجامعة</p>"
+            +"\n"
+            + "<p>وجميع البيانات الموجودة على أجهزة الحاسب الخادمة وأجهزة الحاسب الشخصية الموجودة بالجامعة ملك للجامعة ويجب الحفاظ على صحتها وسريتها وإتاحتها بشكل كامل ولذلك يتم مراقبة حجم المعلومات المتداولة على شبكة الجامعة حتى لا يتم حدوث أي مشاكل تؤدى إلى عدم إتاحتها بشكل كامل</p>"
+            +"\n"
+            + "<p>وأي محاولة من أي مستخدم لانتهاك خصوصية هذه المعلومات أو التأثير على صحتها أو إتاحتها فسوف يتم إلغاء حسابه وسيتعرض للمساءلة القانونية</p>"
+            +"\n"
+            + "<p>والمستخدم سيكون مسئولا عما يقوم به من خلال كلمة المرور الخاصة به ويجب عليه عدم القيام بأي إجراء يخالف الأهداف التي اتاحت الجامعة جميع إمكانيات تكنولوجيا المعلومات الخاصة بها من أجل تحقيقها والإجراءات التي يجب على كل مستخدم عدم القيام بها هي على سبيل المثال وليس الحصر:</p>"
+            +"\n"
+            +"<ul>"
+            +"<li>إعطاء اسم المستخدم او كلمة المرور الخاصة به لشخص آخر</li>"
+            +"<li>الولوج أو الاطلاع أو استخدام أي ملفات لا تخصه</li>"
+            +"<li>الدخول على مواقع محظورة اجتماعياً أو سياسياً أو دينياً</li>"
+            +"<li>نسخ أو نقل برامج باستخدام أي من طرق القرصنة </li>"
+            +"<li>نسخ برامج أو ملفات بصورة غير قانونية</li>"
+            +"<li>نشر برامج ضارة كالفيروسات</li>"
+            +"<li>تثبيت برمجيات بها انتهاك لحقوق الملكية الفكرية</li>"
+            +"<li>مخالفة قانون الملكية الفكرية</li>"
+            +"<li>تثبيت برمجيات تؤثر على عمل برمجيات الجامعة الرسمية</li>"
+            +"<li>تركيب أي أجهزة شبكات</li>"
+            +"<li>العبث في أي من مكونات شبكة الجامعة</li>"
+            +"<li>استخدام هذه الإمكانيات لأغراض تجارية أو لتحقيق مكاسب مالية</li>"
+            +"<li>استخدام هذه الإمكانيات لأغراض غير قانونية</li>"
+            +"</ul>"
+            +"<p style='text-decoration: underline;'>كما يجب على كل مستخدم الالتزام بالقوانين المنظمة للخدمات الإلكترونية في جمهورية مصر العربية</p>"
+        ;
+    }
+    else{
+        txt = ""
+            +"<p>Using the informational technology resources of the University is a privilege and is provided to all students to enhance teaching and learning and for class assignments, academic research, and personal advancement.</p>"
+            +"\n"
+            +"<p>Informational technology resources include, but are not limited to, user accounts, email accounts, network and Internet access.</p>"
+            +"\n"
+            +"<p>All data on the campus network, computers and servers belong to "+univ_name+". To maintain the integrity of this data, network traffic will be monitored regularly. Any attempt to compromise the integrity of the data or any unacceptable use of technological resources could result in revocation of the user’s accounts and/or disciplinary and legal action. In the event of a criminal investigation, the institution will comply fully with legal authorities.</p>"
+            +"\n"
+            +"<p>Users will be held accountable for their activities and should not engage in unacceptable user practices which include, but are not limited to, the following:</p>"
+            +"\n"
+            +"<ul>"
+            +"<li>Sharing log in ID and/or password</li>"
+            +"<li>Accessing computer files not belonging to them</li>"
+            +"<li>Viewing pornographic or offensive content</li>"
+            +"<li>Sending harassing messages</li>"
+            +"<li>Copying or transferring computer software which constitutes software piracy</li>"
+            +"<li>Propagating a computer virus</li>"
+            +"<li>Installing software that could compromise existing systems</li>"
+            +"<li>Violating copyright laws</li>"
+            +"<li>Installing any networking devices</li>"
+            +"<li>Tampering with any network equipment</li>"
+            +"<li>Using resources for commercial or financial gain</li>"
+            +"<li>Using resources for any illegal purpose</li>"
+            +"<li>Complying with regulating laws in Egypt</li>"
+            +"</ul>"
+        ;
+    }
+    return txt;
+}
+
+function agree() {
+    if(! $("[name='chkAgree']").is(":checked")){
+        $("#div-agreement-error").html(gettext("MUST_AGREE"));
+        $("#div-agreement-error").show();
+        return false;
+    }
+    $("#div-agreement-error").html("");
+    $("#div-agreement-error").hide();
+    $.ajax({
+        url: "/accept_agreement",
+        data: {},
+        type: "get",
+        dataType: 'json',
+        success: function (result) {//console.log(data)
+            if(result["failed"]){
+                $("#div-agreement-error").html(["msg"]);
+            }
+            else{
+                success_modal(result["msg"]);
+                window.location="/";
+            }
+        }
+    });
+}
+
+
+function get_vaccine_alert_text() {
+    var l = Cookies.get(LANG_COOKIE);
+    var txt = "";
+    if (l=="ar"){
+        txt = ""
+            + "<p style='text-align: center;color:red;text-decoration: underline;'>بناء على تعليمات الجامعة </p>"
+            +"\n"
+            + "<p>على جميع الطلاب الذين لم يتلقوا اللقاح سرعه التسجيل والتوجة لتلقى اللقاح حيث انه "
+            + "<span style='text-decoration: underline;'>لن يسمح للطلاب الذين لم يتلقوا اللقاح بالدخول الى الحرم الجامعى او الاستمرار فى الدراسة لاى سبب</span>"
+            + "اعتباراً من 15/11/2021 على ان يستمر اتاحة فرصة تلقى الجرعه الاولى حتى 12/11/2021 </p>"
+            +"\n"
+            +"<ul>"
+            +"<li style='color:red;'>على من لديه مانع طبى من تلقى اللقاح التوجة لادارة شئون الدراسة والامتحانات بالكلية لتقديم طلب للعرض على الادارة الطبية للنظر فى الامر .</li>"
+            //+"<li>يؤجل تلقى التطعيم للطلاب الذين لم يبلغو سن ( 18 ) عام لحين بلوغهم هذا السن </li>"
+            +"</ul>"
+            +"<p >وعلى الطلاب الذين تلقو التطعيم خارج الجامعه تسليم صورة من كارت التطعيم بإدارة شئون الدراسة والامتحانات وذلك فى اسرع وقت ممكن </p>"
+            +"<p >كما يمكن الاطلاع على بيانات اللقاح فى البيانات الشخصية ولو وجد اى تعديل او اختلاف يرجى التوجة لإدارة الدراسة والامتحانات لاستكمال البيانات </p>"
+        ;
+    }
+    else{
+        txt = ""
+             + "<p style='text-align: center;color:red;text-decoration: underline;'>بناء على تعليمات الجامعة </p>"
+            +"\n"
+            + "<p>على جميع الطلاب الذين لم يتلقوا اللقاح سرعه التسجيل والتوجة لتلقى اللقاح حيث انه "
+            + "<span style='text-decoration: underline;'>لن يسمح للطلاب الذين لم يتلقوا اللقاح بالدخول الى الحرم الجامعى او الاستمرار فى الدراسة لاى سبب</span>"
+            + "اعتباراً من 15/11/2021 على ان يستمر اتاحة فرصة تلقى الجرعه الاولى حتى 12/11/2021 </p>"
+            +"\n"
+            +"<ul>"
+            +"<li style='color:red;'>على من لديه مانع طبى من تلقى اللقاح التوجة لادارة شئون الدراسة والامتحانات بالكلية لتقديم طلب للعرض على الادارة الطبية للنظر فى الامر .</li>"
+            //+"<li>يؤجل تلقى التطعيم للطلاب الذين لم يبلغو سن ( 18 ) عام لحين بلوغهم هذا السن </li>"
+            +"</ul>"
+            +"<p >وعلى الطلاب الذين تلقو التطعيم خارج الجامعه تسليم صورة من كارت التطعيم بإدارة شئون الدراسة والامتحانات وذلك فى اسرع وقت ممكن </p>"
+            +"<p >كما يمكن الاطلاع على بيانات اللقاح فى البيانات الشخصية ولو وجد اى تعديل او اختلاف يرجى التوجة لإدارة الدراسة والامتحانات لاستكمال البيانات </p>"
+        ;
+    }
+    return txt;
+}

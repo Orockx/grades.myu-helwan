@@ -1,0 +1,182 @@
+TRANSLATED_STRINGS = {
+    "SESSION_EXPIRED":{
+        "ar":"انتهت فترة الدخول",
+        "en":"Session Expired"
+    },
+    "403":{
+        "ar":"ليس لك الحق فى الاستخدام",
+        "en":"You have no rights for use"
+    },
+    "GENERAL_ERROR":{
+        "ar":"لايمكن عرض المحتوى الآن، حاول فى وقت لاحق",
+        "en":"Content can't be displayed, Try again later"
+    },
+    "ADD_NEW_ITEM":{
+        "ar":"إضافة بيان جديد",
+        "en":"Add New Item"
+    },
+    "SAVE":{
+        "ar":"حفظ",
+        "en":"Save"
+    },
+    "CANCEL":{
+        "ar":"إلغاء",
+        "en":"Cancel"
+    },
+    "OK":{
+        "ar":"موافق",
+        "en":"OK"
+    },
+    "YES":{
+        "ar":"نعم",
+        "en":"Yes"
+    },
+    "NO":{
+        "ar":"لا",
+        "en":"No"
+    },
+    "EDIT":{
+        "ar":"تعديل",
+        "en":"Edit"
+    },
+    "DELETE":{
+        "ar":"حذف",
+        "en":"Delete"
+    },
+    "CONFIRM":{
+        "ar":"تأكيد",
+        "en":"Confirm"
+    },
+    "CONFIRM_DELETE":{
+        "ar":"تأكيد حذف البيان",
+        "en":"Confirm Delete"
+    },
+    "MIN_MAX_VALIDATION":{
+        "ar":"طول الحقل يجب أن يكون %(min)s على الأقل، %(max)s على الأكثر",
+        "en":"Length should be %(min)s at least and %(max)s at most"
+    },
+    "WEAK_PASSWORD":{
+        "ar":"كلمة المرور ضعيفة",
+        "en":"Weak Password"
+    },
+    "PASSWORD_NOT_IDENTICAL":{
+        "ar":"كلمة المرور الجديدة غير متطابقة",
+        "en":"New passwords are not identical"
+    },
+    "NO_ITEMS_SELECTED":{
+        "ar":"يجب اختيار عناصر",
+        "en":"No items selected"
+    },
+    "TYPE_TO_SEARCH": {
+        "ar":"للبحث اكتب جزء من الاسم",
+        "en":"Type in a search term"
+    },
+    "NO_RESULTS": {
+        "ar":"لا توجد نتائج",
+        "en":"No results"
+    },
+    "SEARCHING": {
+        "ar":"جارى البحث...",
+        "en":"Searching..."
+    },
+    "SEND": {
+        "ar":"إرسال",
+        "en":"Send"
+    },
+    "RECIPIENTS_REQUIRED":{
+        "ar":"يجب تحديد مستلم واحد على الأقل",
+        "en":""
+    },
+    "SHORT_MSG_CONTENT":{
+        "ar":"محتوى الرسالة صغير",
+        "en":"Message content is too short"
+    },
+    "INVALID_EXT":{
+        "ar":"غير مسموح بالامتداد $ext!" //english in lib
+    },
+    "DUPLICATE_FILE":{
+        "ar":"تم اختيار هذا الملف من قبل:\n$file"//english in lib
+    },
+    "TOO_BIG":{
+        "ar":"$file حجمه كبير $size" //english in lib
+    },
+    "TOO_MANY":{
+        "ar":"اقصى عدد مسموح به من الملفات هو $max" //english in lib
+    },
+    "EMPTY_TABLE":{
+        "ar": "ليست هناك بيانات متاحة في الجدول",
+        "en":"No data available in table"
+    },
+    "LOADING":{
+        "ar":"جارٍ التحميل",
+        "en":"Loading"
+    },
+    "PROCESSING":{
+        "ar":"جارٍ التحميل",
+        "en":"Processing"
+    },
+    "SHOWING_OF_TOTAL":{
+        "ar":"إظهار _START_ إلى _END_ من أصل _TOTAL_ مدخل",
+        "en":"Showing _START_ to _END_ of _TOTAL_ entries"
+    },
+    "SHOWING_ZERO":{
+        "ar":"يعرض 0 إلى 0 من أصل 0 سجل",
+        "en":"Showing 0 to 0 of 0 entries"
+    },
+    "INVALID_EXTENSION":{
+        "ar":"الامتداد المسموح به فقط هو ",
+        "en": "Invalid extension, allowed is "
+    },
+    "FILE_REQUIRED":{
+        "ar":"يجب رفع ملف الاجابة",
+        "en":"Answers file is required"
+    },
+    "MOBILE_MIN_VALIDATION":{
+        "ar":"رقم الهاتف المحمول يجب أن يكون %(min)s على الأقل",
+        "en":"Length of mobile number should be %(min)s at least"
+    },
+    "INVALID_EMAIL":{
+        "ar":"بريد غير صحيح",
+        'en':"Invali email"
+    },
+    "ONLY_DIGITS_ALLOWED_IN_MOBILE":{
+        "ar":"مسموح بأرقام فقط فى خانة المحمول",
+        "en":"Only digits allowed in mobile field"
+    },
+    "SUBMIT_ANSWER_CONFIRM":{
+        "ar":"عند حفظ ورقة الإجابة لن يمكن التعديل فيها مرة أخرى، استمرار؟",
+        "en":"When you submit answer, you can't change it. Contiue?"
+    },
+    "MUST_AGREE":{
+        "ar":"يجب الموافقة على الشروط",
+        "en":"You have to accept agreement"
+    },
+    "MAKE_SURE_UPLOAD_ANSWER":{
+        "ar":"يجب الضغط على زر حفظ الملف حتى يتم حفظ اجابتك",
+        "en":"Make sure to click on submit answer button to save your answer file"
+    },
+    "SIZE_EXCEEDED":{
+        "ar":"حجم الملف يجب ألا يتعدى",
+        "en":"File size should not exceed"
+    },
+    "ONLY_ENGLISH_LETTERS":{
+        "ar":"مسموح بحروف انجليزية فقط",
+        "en":"Only English letters allowed"
+    },
+    "IMPORTANT":{
+        "ar": "تنبيه هام",
+        "en": "IMPORTANT ANNOUNCE"
+    },
+    "LOWER_LEFT":{
+        "ar": "left",
+        "en": "right"
+    },
+    "UPPER_LEFT":{
+        "ar": "Left",
+        "en": "Right"
+    },
+    "UPLOAD_YOUR_PHOTO":{
+        "ar": "برجاء رفع صورتك الشخصية",
+        "en": "Please upload your photo"
+    }
+};

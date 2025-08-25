@@ -1,0 +1,28 @@
+.land-header-group{
+  cursor: pointer;
+}
+
+.overlay {
+  position: fixed !important; /* Sit on top of the page content */
+  /*display: none;*/ /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+    transform: none !important;
+    cursor: default;
+}
+
+.land-header-group .dropdown-menu div.centered{
+    padding-top: 0 !important;
+    background: #FFFFFF;
+    text-align: center;
+}
+
+.land-header-group .dropdown-menu ul{
+    padding: 10px;
+}
